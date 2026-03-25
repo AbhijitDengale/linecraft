@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeaderShift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0a0e1a;
+      --bg-card: #111827;
+      --accent-teal: #00d4aa;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-primary: #f0f4ff;
+      --text-muted: #6b7280;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; }
+    .mono { font-family: var(--font-mono); }
+    
+    /* Layout */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100%;
+      padding: 2rem;
+      opacity: 0;
+      transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      transform: translateY(20px);
+    }
+    .screen.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Components */
+    .btn {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--accent-teal);
+      padding: 1rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--accent-teal);
+      color: var(--bg-deep);
+      box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: var(--text-muted);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-primary);
+      padding: 1rem;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      font-family: var(--font-body);
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent-teal);
+    }
+
+    .age-toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .age-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+    }
+    .age-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+    .age-card.selected {
+      border-color: var(--accent-teal);
+      background: rgba(0, 212, 170, 0.1);
+      box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+    }
+
+    /* Level UI */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, var(--bg-deep), transparent);
+      z-index: 10;
+    }
+    .timer-container {
+      flex: 1;
+      max-width: 300px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin: 0 2rem;
+      overflow: hidden;
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent-teal);
+      transition: width 1s linear, background-color 0.3s;
+    }
+
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    @media (max-width: 600px) {
+      .choices-grid { grid-template-columns: 1fr; }
+    }
+    .choice-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .choice-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-teal);
+      box-shadow: 0 5px 15px rgba(0, 212, 170, 0.15);
+    }
+    .choice-card.selected {
+      background: var(--accent-teal);
+      color: var(--bg-deep);
+    }
+
+    /* Overlays */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 14, 26, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      padding: 2rem;
+      text-align: center;
+    }
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    /* Results */
+    .results-container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+      padding: 4rem 0;
+    }
+    .identity-hero {
+      text-align: center;
+    }
+    .identity-hero h1 {
+      font-size: 3rem;
+      color: var(--accent-teal);
+      margin-bottom: 1rem;
+      text-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+    .styles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 600px) {
+      .styles-grid { grid-template-columns: 1fr; }
+    }
+    .style-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 2rem;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .style-card h3 { color: var(--accent-amber); margin: 1rem 0; }
+    
+    .radar-container {
+      background: rgba(255,255,255,0.03);
+      padding: 2rem;
+      border-radius: 16px;
+    }
+    .stat-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+    .stat-label { width: 200px; font-size: 0.9rem; }
+    .stat-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .stat-bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 1s ease-out;
+    }
+    .stat-val { width: 40px; text-align: right; font-family: var(--font-mono); font-size: 0.9rem; }
+
+    .pathway-card {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(0, 212, 170, 0.05));
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      padding: 2rem;
+      border-radius: 16px;
+    }
+    .pathway-card h3 { color: var(--accent-rose); margin-bottom: 1.5rem; }
+    .pathway-step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .step-num {
+      background: var(--accent-rose);
+      color: white;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .reflection {
+      text-align: center;
+      font-style: italic;
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      margin: 2rem 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @media print {
+      body { background: white; color: black; }
+      .btn, .top-bar, #bg-canvas { display: none !important; }
+      .card, .radar-container, .style-card, .pathway-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; }
+      .identity-hero h1 { color: black; text-shadow: none; }
+      .stat-bar-bg { background: #eee; }
+      .stat-bar-fill { background: #333 !important; }
+      .step-num { background: #333; }
+      h3 { color: #333 !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Screen 0: Splash -->
+  <div id="screen-0" class="screen active">
+    <div style="text-align: center; max-width: 600px;">
+      <h1 style="font-size: 4rem; margin-bottom: 1rem; letter-spacing: -1px;">
+        <span style="color: var(--accent-teal)">LEADER</span><span style="color: var(--accent-amber)">SHIFT</span>
+      </h1>
+      <p style="font-size: 1.5rem; margin-bottom: 2rem; color: var(--text-primary);">Discover the leader within.</p>
+      <p style="color: var(--text-muted); margin-bottom: 3rem;">10 minutes. 5 challenges. Your unique leadership DNA.</p>
+      <button class="btn" onclick="startGame()">Begin Your Journey &rarr;</button>
+      <div style="margin-top: 4rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); opacity: 0.7;">
+        Based on 7 Leadership Theories &bull; Ages 13&ndash;25 &bull; Free
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 1: Setup -->
+  <div id="screen-1" class="screen">
+    <div class="card">
+      <div style="font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Step 1 of 2 &mdash; &bull; &circ;</div>
+      <h2 style="margin-bottom: 1rem;">What should we call you?</h2>
+      <input type="text" id="player-name" placeholder="Your name" autocomplete="off">
+      
+      <h2 style="margin-bottom: 1rem;">How old are you?</h2>
+      <div class="age-toggles">
+        <div class="age-card" onclick="selectAge('13-16')">
+          <span style="font-size: 2rem;">🏫</span>
+          <div>
+            <div style="font-weight: bold; font-size: 1.1rem;">Ages 13–16</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">School & Teams</div>
+          </div>
+        </div>
+        <div class="age-card" onclick="selectAge('17-20')">
+          <span style="font-size: 2rem;">🎓</span>
+          <div>
+            <div style="font-weight: bold; font-size: 1.1rem;">Ages 17–20</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">College & Ambition</div>
+          </div>
+        </div>
+        <div class="age-card" onclick="selectAge('21-25')">
+          <span style="font-size: 2rem;">💼</span>
+          <div>
+            <div style="font-weight: bold; font-size: 1.1rem;">Ages 21–25</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">Work & Purpose</div>
+          </div>
+        </div>
+      </div>
+      <button id="btn-setup-continue" class="btn" style="width: 100%;" disabled onclick="startPreAssessment()">Continue &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Pre-assessment -->
+  <div id="screen-2" class="screen">
+    <div class="top-bar" style="position: absolute;">
+      <div class="mono" style="color: var(--text-muted)">Self-Perception</div>
+      <div class="timer-container" style="height: 4px; background: rgba(255,255,255,0.1);">
+        <div id="pre-progress" class="timer-bar" style="width: 25%; background: var(--accent-amber);"></div>
+      </div>
+      <div class="mono" id="pre-counter">1/4</div>
+    </div>
+    <div class="card" id="pre-assessment-container">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <!-- Screens 3-7: Levels -->
+  <div id="screen-level" class="screen" style="align-items: flex-start; justify-content: flex-start; padding-top: 100px;">
+    <div class="top-bar">
+      <div class="mono" id="level-title" style="font-weight: bold; color: var(--accent-teal);">Level Title</div>
+      <div class="timer-container">
+        <div id="level-timer" class="timer-bar"></div>
+      </div>
+      <div class="mono" id="level-counter">1/5</div>
+    </div>
+    
+    <div style="width: 100%; max-width: 800px; margin: 0 auto;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;" id="level-icon">🧭</div>
+      <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; line-height: 1.4;" id="level-scenario">Scenario text goes here...</h2>
+      
+      <div class="choices-grid" id="level-choices">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Follow-up Overlay -->
+  <div id="overlay-followup" class="overlay">
+    <div class="card" style="background: var(--bg-deep);">
+      <h3 style="margin-bottom: 2rem; color: var(--accent-amber);" id="followup-q">And then you...</h3>
+      <div style="display: flex; flex-direction: column; gap: 1rem;" id="followup-choices">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Complete Overlay -->
+  <div id="overlay-insight" class="overlay">
+    <h2 style="color: var(--accent-teal); margin-bottom: 2rem; font-size: 2.5rem;">Level Complete</h2>
+    <p style="font-size: 1.5rem; font-style: italic; max-width: 600px; line-height: 1.5;" id="insight-text">Insight goes here.</p>
+  </div>
+
+  <!-- Screen 8: Results -->
+  <div id="screen-results" class="screen" style="padding-top: 4rem;">
+    <div class="results-container" id="results-content">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <script>
+    // --- GAME DATA ---
+    const GAME_DATA = {
+      preAssessment: [
+        {
+          q: "In a group, you usually...",
+          options: [
+            { text: "🗺️ Plan and organize", theory: "transactional" },
+            { text: "⚡ Motivate others", theory: "transformational" },
+            { text: "👂 Listen and support", theory: "servant" },
+            { text: "🔧 Solve problems", theory: "situational" }
+          ]
+        },
+        {
+          q: "When something goes wrong, your first instinct is...",
+          options: [
+            { text: "Take charge immediately", theory: "transactional" },
+            { text: "Understand what happened first", theory: "situational" },
+            { text: "Check how everyone's feeling", theory: "servant" },
+            { text: "Find the fastest fix", theory: "clarity" }
+          ]
+        },
+        {
+          q: "Leadership to you means...",
+          options: [
+            { text: "Having the best plan", theory: "transactional" },
+            { text: "Inspiring people to believe", theory: "transformational" },
+            { text: "Making sure no one is left behind", theory: "servant" },
+            { text: "Getting results", theory: "transactional" }
+          ]
+        },
+        {
+          q: "In tough situations, you trust...",
+          options: [
+            { text: "Your logic", theory: "transactional" },
+            { text: "Your values", theory: "authentic" },
+            { text: "Your relationships", theory: "servant" },
+            { text: "Your experience", theory: "situational" }
+          ]
+        }
+      ],
+      levels: [
+        {
+          id: 1, icon: "🧭", title: "The First Call",
+          scenarios: {
+            "13-16": "Your teacher assigns you to lead a group project. One teammate hasn't done their part and the presentation is tomorrow. The group is looking at you.",
+            "17-20": "You're the project lead for a college submission due in 18 hours. One team member has gone silent and hasn't submitted their section. Everyone else is waiting on you to decide.",
+            "21-25": "Your manager assigned you to coordinate a client deliverable. It's 9 PM, due at 9 AM. One intern hasn't sent their part and isn't responding. The team is watching."
+          },
+          choices: [
+            { text: "I tell the group exactly what we need to do right now — let's redistribute and finish.", scores: { clarity: 3 }, theories: { transactional: 2 } },
+            { text: "I reach out to the missing teammate first — there might be a real reason.", scores: { empathy: 3 }, theories: { servant: 2 } },
+            { text: "I'll just do their part myself so it gets done right.", scores: { clarity: 1, adaptability: -1 }, theories: {} },
+            { text: "I rally everyone: 'We've got this — let's make it our best work yet!'", scores: { vision: 2 }, theories: { transformational: 2 } }
+          ],
+          followUp: {
+            q: "After handling the immediate situation, you...",
+            options: [
+              { text: "Make a note to discuss this teammate's workload later", scores: { integrity: 1 }, theories: {} },
+              { text: "Move on — it's done", scores: {}, theories: {} }
+            ]
+          },
+          insight: "Clarity under pressure is the foundation of every leader. The best leaders act AND care."
+        },
+        {
+          id: 2, icon: "⚙️", title: "The Countdown",
+          scenarios: {
+            "13-16": "Your sports team is losing by two points with 5 minutes left. Half the team looks defeated. You're not the captain, but everyone's glancing at you.",
+            "17-20": "Your college event committee is 2 days from the deadline and two key tasks are undone. People are arguing over who does what. You're the coordinator.",
+            "21-25": "Your startup team is 48 hours from a product launch. Two features are unfinished. The developer and designer are in conflict about priorities. You're the project manager."
+          },
+          choices: [
+            { text: "I break down exactly who does what in the next 48 hours.", scores: { clarity: 3 }, theories: { transactional: 3 } },
+            { text: "I ask the team what they think is most critical and build a plan from that.", scores: { adaptability: 2 }, theories: { situational: 2 } },
+            { text: "I sit with both people in conflict and understand both sides before we plan.", scores: { empathy: 3 }, theories: { servant: 2 } },
+            { text: "I remind the team WHY this matters and get them re-energized first.", scores: { vision: 3 }, theories: { transformational: 2 } }
+          ],
+          followUp: {
+            q: "You also...",
+            options: [
+              { text: "Send a quick update to everyone so no one is in the dark", scores: { integrity: 1 }, theories: { authentic: 1 } },
+              { text: "Keep it internal and deal with it yourself", scores: {}, theories: {} }
+            ]
+          },
+          insight: "Great coordinators don't just manage tasks — they manage energy."
+        },
+        {
+          id: 3, icon: "🤝", title: "The Fault Line",
+          scenarios: {
+            "13-16": "Your two best friends in the group have stopped talking to each other. It's affecting the whole team's vibe. Both have told you their side privately.",
+            "17-20": "A talented teammate has gone quiet and withdrawn after being criticized publicly by someone during a meeting. You notice they're about to quit.",
+            "21-25": "A high-performing team member is struggling after a personal setback and their work quality has slipped. Your supervisor wants you to 'address performance.' You see the person, not just the numbers."
+          },
+          choices: [
+            { text: "I sit with them privately and genuinely listen — no agenda.", scores: { empathy: 4 }, theories: { servant: 3 } },
+            { text: "I bring both sides together and focus on facts and resolution.", scores: { clarity: 2 }, theories: { authentic: 2 } },
+            { text: "I gently remind them that the team needs them — appeal to shared purpose.", scores: { vision: 2 }, theories: { transformational: 2 } },
+            { text: "Performance is performance — I address the output issue professionally.", scores: { clarity: 2 }, theories: { transactional: 2 } }
+          ],
+          followUp: {
+            q: "After the conversation, you...",
+            options: [
+              { text: "Follow up two days later to check how they're doing", scores: { empathy: 2 }, theories: { servant: 2 } },
+              { text: "Trust them to sort it out", scores: {}, theories: {} }
+            ]
+          },
+          insight: "Leaders who earn trust don't demand it. They create the conditions for it."
+        },
+        {
+          id: 4, icon: "⚖️", title: "The Easy Win",
+          scenarios: {
+            "13-16": "Your team realizes you could win the quiz competition by using answers someone leaked. Half the team says 'everyone does it.' You're the leader.",
+            "17-20": "Your event proposal was heavily inspired by another college's work. Your team wants to present it without crediting them. It's an important competition.",
+            "21-25": "Your team discovers a competitor's unreleased strategy through a contact. Using it would guarantee the pitch win. Your manager hasn't said not to — but you know it's wrong."
+          },
+          choices: [
+            { text: "We don't do this. I explain why integrity matters more than one win.", scores: { integrity: 5 }, theories: { authentic: 4 } },
+            { text: "I stay neutral — let the team vote on it.", scores: { integrity: -2, clarity: -1 }, theories: {} },
+            { text: "I find a way to acknowledge the source while still competing.", scores: { integrity: 3, vision: 2 }, theories: { authentic: 3 } },
+            { text: "Winning sets us up for bigger things — I'll justify it later.", scores: { integrity: -4 }, theories: { transactional: 1 } }
+          ],
+          followUp: {
+            q: "You later...",
+            options: [
+              { text: "Talk to the team about building a culture of integrity", scores: { integrity: 2 }, theories: {} },
+              { text: "Don't bring it up again", scores: {}, theories: {} }
+            ]
+          },
+          insight: "The choices no one sees define the leader everyone eventually becomes."
+        },
+        {
+          id: 5, icon: "🌟", title: "The Bigger Picture",
+          scenarios: {
+            "13-16": "You're asked to lead a school initiative to help newer students settle in. You could do it the easy way — a quick assembly — or build something that actually changes things.",
+            "17-20": "After a failed college campaign, your core team is demoralized. You've been given one more chance. Most people expect you to play it safe this time.",
+            "21-25": "You're leading a volunteer team rebuilding a community initiative that previously failed. Resources are thin. People are skeptical. You need to create belief where there is none."
+          },
+          choices: [
+            { text: "I cast a vision that's bigger than just this project — I show them what's possible.", scores: { vision: 5 }, theories: { transformational: 4 } },
+            { text: "I give everyone a clear, structured role and rebuild confidence through small wins.", scores: { clarity: 3, adaptability: 3 }, theories: { situational: 2 } },
+            { text: "I serve quietly — take on the harder tasks, support others, and earn trust back.", scores: { empathy: 4 }, theories: { servant: 4 } },
+            { text: "I have honest conversations about what failed and co-create a new path together.", scores: { integrity: 3, adaptability: 2 }, theories: { authentic: 3 } }
+          ],
+          followUp: {
+            q: "As things improve, you...",
+            options: [
+              { text: "Make sure to publicly recognize individual contributions", scores: { empathy: 2 }, theories: { transformational: 1 } },
+              { text: "Keep the focus on the result", scores: {}, theories: {} }
+            ]
+          },
+          insight: "Transformational leadership isn't a style — it's a commitment to people and possibility."
+        }
+      ]
+    };
+
+    const THEORY_DESCRIPTIONS = {
+      transformational: "Inspires and motivates through a shared vision.",
+      transactional: "Focuses on structure, roles, and clear expectations.",
+      servant: "Prioritizes the needs and growth of the team first.",
+      situational: "Adapts leadership style to the specific context.",
+      authentic: "Leads with transparency, values, and genuine integrity."
+    };
+
+    // --- STATE ---
+    let gameState = {
+      playerName: "",
+      ageGroup: "",
+      currentScreen: 0,
+      preAssessmentStep: 0,
+      preAssessment: {},
+      currentLevelIndex: 0,
+      scores: { clarity: 0, integrity: 0, empathy: 0, vision: 0, adaptability: 0 },
+      theoryPoints: { transactional: 0, transformational: 0, situational: 0, authentic: 0, servant: 0 },
+      choices: [],
+      timeBonus: 0
+    };
+
+    let timerInterval;
+    let levelTimeLeft = 75;
+
+    // --- CORE LOGIC ---
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+      switchScreen('screen-1');
+      document.getElementById('player-name').focus();
+    }
+
+    document.getElementById('player-name').addEventListener('input', checkSetupValid);
+
+    function selectAge(age) {
+      gameState.ageGroup = age;
+      document.querySelectorAll('.age-card').forEach(c => c.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+      checkSetupValid();
+    }
+
+    function checkSetupValid() {
+      const name = document.getElementById('player-name').value.trim();
+      const btn = document.getElementById('btn-setup-continue');
+      if (name && gameState.ageGroup) {
+        gameState.playerName = name;
+        btn.disabled = false;
+      } else {
+        btn.disabled = true;
+      }
+    }
+
+    function startPreAssessment() {
+      gameState.preAssessmentStep = 0;
+      renderPreAssessment();
+      switchScreen('screen-2');
+    }
+
+    function renderPreAssessment() {
+      const step = gameState.preAssessmentStep;
+      if (step >= GAME_DATA.preAssessment.length) {
+        startLevels();
+        return;
+      }
+      
+      const qData = GAME_DATA.preAssessment[step];
+      const container = document.getElementById('pre-assessment-container');
+      
+      document.getElementById('pre-progress').style.width = `${((step + 1) / 4) * 100}%`;
+      document.getElementById('pre-counter').innerText = `${step + 1}/4`;
+
+      let html = `<h2 style="margin-bottom: 2rem; font-size: 1.5rem;">${qData.q}</h2><div style="display: flex; flex-direction: column; gap: 1rem;">`;
+      qData.options.forEach((opt, idx) => {
+        html += `<div class="choice-card" style="animation: slideUp ${0.1 * idx}s ease-out forwards; opacity: 0; transform: translateY(10px);" onclick="selectPreAssessment('${opt.theory}')">${opt.text}</div>`;
+      });
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function selectPreAssessment(theory) {
+      gameState.preAssessment[gameState.preAssessmentStep] = theory;
+      gameState.preAssessmentStep++;
+      renderPreAssessment();
+    }
+
+    function startLevels() {
+      gameState.currentLevelIndex = 0;
+      renderLevel();
+      switchScreen('screen-level');
+    }
+
+    function renderLevel() {
+      const level = GAME_DATA.levels[gameState.currentLevelIndex];
+      document.getElementById('level-title').innerText = level.title;
+      document.getElementById('level-counter').innerText = `${gameState.currentLevelIndex + 1}/5`;
+      document.getElementById('level-icon').innerText = level.icon;
+      document.getElementById('level-scenario').innerText = level.scenarios[gameState.ageGroup];
+      
+      const choicesContainer = document.getElementById('level-choices');
+      let html = '';
+      level.choices.forEach((choice, idx) => {
+        html += `<div class="choice-card" style="animation: slideUp ${0.1 * idx}s ease-out forwards; opacity: 0; transform: translateY(10px);" onclick="selectLevelChoice(${idx})">${choice.text}</div>`;
+      });
+      choicesContainer.innerHTML = html;
+
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      levelTimeLeft = 75;
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        levelTimeLeft--;
+        updateTimerUI();
+        if (levelTimeLeft <= 0) {
+          clearInterval(timerInterval);
+          selectLevelChoice(0);
+        }
+      }, 1000);
+    }
+
+    function updateTimerUI() {
+      const bar = document.getElementById('level-timer');
+      const pct = (levelTimeLeft / 75) * 100;
+      bar.style.width = `${pct}%`;
+      if (pct > 50) bar.style.backgroundColor = 'var(--accent-teal)';
+      else if (pct > 25) bar.style.backgroundColor = 'var(--accent-amber)';
+      else bar.style.backgroundColor = 'var(--accent-rose)';
+    }
+
+    function applyScores(scores, theories) {
+      if (scores) {
+        for (let key in scores) gameState.scores[key] += scores[key];
+      }
+      if (theories) {
+        for (let key in theories) {
+          if (gameState.theoryPoints[key] !== undefined) {
+             gameState.theoryPoints[key] += theories[key];
+          }
+        }
+      }
+    }
+
+    function selectLevelChoice(idx) {
+      clearInterval(timerInterval);
+      if (levelTimeLeft > 55) { // Under 20s
+        gameState.scores.adaptability += 2;
+        gameState.timeBonus += 2;
+      }
+
+      const level = GAME_DATA.levels[gameState.currentLevelIndex];
+      const choice = level.choices[idx];
+      applyScores(choice.scores, choice.theories);
+      gameState.choices.push({ level: level.id, choiceIdx: idx });
+
+      renderFollowUp(level);
+    }
+
+    function renderFollowUp(level) {
+      const overlay = document.getElementById('overlay-followup');
+      document.getElementById('followup-q').innerText = level.followUp.q;
+      
+      const container = document.getElementById('followup-choices');
+      let html = '';
+      level.followUp.options.forEach((opt, idx) => {
+        html += `<div class="choice-card" onclick="selectFollowUp(${idx})">${opt.text}</div>`;
+      });
+      container.innerHTML = html;
+      overlay.classList.add('active');
+    }
+
+    function selectFollowUp(idx) {
+      const level = GAME_DATA.levels[gameState.currentLevelIndex];
+      const choice = level.followUp.options[idx];
+      applyScores(choice.scores, choice.theories);
+      
+      document.getElementById('overlay-followup').classList.remove('active');
+      showInsight(level.insight);
+    }
+
+    function showInsight(text) {
+      const overlay = document.getElementById('overlay-insight');
+      document.getElementById('insight-text').innerText = text;
+      overlay.classList.add('active');
+      createParticles();
+      
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        gameState.currentLevelIndex++;
+        if (gameState.currentLevelIndex < GAME_DATA.levels.length) {
+          renderLevel();
+        } else {
+          showResults();
+        }
+      }, 3500);
+    }
+
+    function getIdentityLabel(primary, secondary) {
+      const combo = [primary, secondary].sort().join('_');
+      const labels = {
+        'authentic_transformational': 'Values-Driven Visionary',
+        'empathy_servant': 'People-First Change Maker',
+        'clarity_transactional': 'Precision-Led Executor',
+        'adaptability_situational': 'Dynamic Adaptive Leader',
+        'authentic_integrity': 'Trust-Anchored Ethical Leader',
+        'servant_transformational': 'Inspiring Servant Leader',
+        'situational_transactional': 'Precision-Led Executor',
+        'authentic_situational': 'Dynamic Adaptive Leader',
+        'authentic_servant': 'Trust-Anchored Ethical Leader',
+        'transactional_transformational': 'Strategic Visionary',
+        'servant_transactional': 'Empathetic Organizer',
+        'servant_situational': 'Adaptive Supporter',
+        'authentic_transactional': 'Principled Executor',
+        'situational_transformational': 'Agile Innovator'
+      };
+      return labels[combo] || 'Balanced Adaptive Leader';
+    }
+
+    function showResults() {
+      switchScreen('screen-results');
+      
+      // Calculate
+      const maxScores = { clarity: 18, integrity: 20, empathy: 18, vision: 18, adaptability: 14 };
+      const theories = Object.entries(gameState.theoryPoints).sort((a, b) => b[1] - a[1]);
+      const primary = theories[0][0];
+      const secondary = theories[1][0];
+      
+      const identityLabel = getIdentityLabel(primary, secondary);
+      
+      // Determine pre-assessment dominant
+      const preCounts = {};
+      Object.values(gameState.preAssessment).forEach(t => { preCounts[t] = (preCounts[t] || 0) + 1; });
+      const preDominant = Object.entries(preCounts).sort((a,b) => b[1] - a[1])[0][0];
+      
+      const gapText = preDominant === primary 
+        ? "You know yourself well! Your actions perfectly aligned with your self-perception."
+        : `You see yourself as ${preDominant}, but under pressure, you rely on ${primary} strengths.`;
+
+      // Weakest
+      const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.round((v / maxScores[k]) * 100))]);
+      scoresArr.sort((a, b) => a[1] - b[1]);
+      const weakest = scoresArr[0][0];
+
+      let html = `
+        <div class="identity-hero" style="animation: slideUp 0.5s ease-out;">
+          <div class="mono" style="color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">Leadership Profile: ${gameState.playerName}</div>
+          <h1>${identityLabel}</h1>
+          <p style="font-size: 1.2rem; color: var(--text-primary);">A leader who ${THEORY_DESCRIPTIONS[primary].toLowerCase()}</p>
+        </div>
+
+        <div class="styles-grid" style="animation: slideUp 0.7s ease-out backwards;">
+          <div class="style-card">
+            <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Dominant Approach</div>
+            <h3>${primary.charAt(0).toUpperCase() + primary.slice(1)}</h3>
+            <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[primary]}</p>
+          </div>
+          <div class="style-card">
+            <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Natural Backup</div>
+            <h3>${secondary.charAt(0).toUpperCase() + secondary.slice(1)}</h3>
+            <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[secondary]}</p>
+          </div>
+        </div>
+
+        <div class="radar-container" style="animation: slideUp 0.9s ease-out backwards;">
+          <h3 style="margin-bottom: 1.5rem; font-family: var(--font-display);">Core Parameters</h3>
+          ${scoresArr.reverse().map((s, i) => {
+            const val = Math.max(10, s[1]); // Ensure at least 10% for visual
+            let color = 'var(--accent-teal)';
+            if (val < 50) color = 'var(--accent-rose)';
+            else if (val < 75) color = 'var(--accent-amber)';
+            return `
+              <div class="stat-row">
+                <div class="stat-label">${s[0].charAt(0).toUpperCase() + s[0].slice(1)}</div>
+                <div class="stat-bar-bg">
+                  <div class="stat-bar-fill" style="width: 0%; background: ${color};" data-width="${val}%"></div>
+                </div>
+                <div class="stat-val">${val}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="card" style="animation: slideUp 1.1s ease-out backwards; max-width: 100%;">
+          <h3 style="margin-bottom: 1rem; color: var(--accent-teal);">Perception vs. Reality</h3>
+          <p style="line-height: 1.6;">${gapText}</p>
+        </div>
+
+        <div class="pathway-card" style="animation: slideUp 1.3s ease-out backwards;">
+          <h3>Growth Pathway: Elevating ${weakest.charAt(0).toUpperCase() + weakest.slice(1)}</h3>
+          <div class="pathway-step">
+            <div class="step-num">1</div>
+            <div>Start actively seeking feedback in situations requiring ${weakest}.</div>
+          </div>
+          <div class="pathway-step">
+            <div class="step-num">2</div>
+            <div>Pause before reacting to consider the ${weakest} perspective.</div>
+          </div>
+          <div class="pathway-step">
+            <div class="step-num">3</div>
+            <div>Find a mentor who excels in ${weakest} and observe their approach.</div>
+          </div>
+        </div>
+
+        <div class="reflection" style="animation: slideUp 1.5s ease-out backwards;">
+          "If you could replay one level, which choice would you change — and why?"
+        </div>
+
+        <div class="actions" style="animation: slideUp 1.7s ease-out backwards;">
+          <button class="btn" style="background: var(--accent-teal); color: var(--bg-deep); border-color: var(--accent-teal);" onclick="window.print()">Download Profile</button>
+          <button class="btn" onclick="location.reload()">Play Again</button>
+        </div>
+      `;
+      
+      document.getElementById('results-content').innerHTML = html;
+
+      // Animate bars
+      setTimeout(() => {
+        document.querySelectorAll('.stat-bar-fill').forEach(bar => {
+          bar.style.width = bar.getAttribute('data-width');
+        });
+      }, 500);
+    }
+
+    // --- EFFECTS ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let orbs = [];
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let i=0; i<5; i++) {
+      orbs.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 200 + 100,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        color: i % 2 === 0 ? 'rgba(0, 212, 170, 0.05)' : 'rgba(245, 158, 11, 0.05)'
+      });
+    }
+
+    function drawBg() {
+      ctx.clearRect(0, 0, width, height);
+      orbs.forEach(orb => {
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+        if(orb.x < -orb.r) orb.x = width + orb.r;
+        if(orb.x > width + orb.r) orb.x = -orb.r;
+        if(orb.y < -orb.r) orb.y = height + orb.r;
+        if(orb.y > height + orb.r) orb.y = -orb.r;
+
+        const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r);
+        grad.addColorStop(0, orb.color);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(drawBg);
+    }
+    drawBg();
+
+    function createParticles() {
+      const pCanvas = document.createElement('canvas');
+      pCanvas.style.position = 'fixed';
+      pCanvas.style.top = '0';
+      pCanvas.style.left = '0';
+      pCanvas.style.pointerEvents = 'none';
+      pCanvas.style.zIndex = '1000';
+      pCanvas.width = window.innerWidth;
+      pCanvas.height = window.innerHeight;
+      document.body.appendChild(pCanvas);
+      
+      const pCtx = pCanvas.getContext('2d');
+      const particles = [];
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      
+      for(let i=0; i<50; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 10 + 5;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: Math.random() * 4 + 2,
+          color: Math.random() > 0.5 ? '#00d4aa' : '#f59e0b',
+          life: 1
+        });
+      }
+      
+      function animateP() {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if (p.life <= 0) return;
+          alive = true;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.2; // gravity
+          p.life -= 0.02;
+          pCtx.globalAlpha = Math.max(0, p.life);
+          pCtx.fillStyle = p.color;
+          pCtx.beginPath();
+          pCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          pCtx.fill();
+        });
+        if (alive) requestAnimationFrame(animateP);
+        else document.body.removeChild(pCanvas);
+      }
+      animateP();
+    }
+  </script>
+</body>
+</html>
