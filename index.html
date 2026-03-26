@@ -38,7 +38,7 @@
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       z-index: -1;
-      opacity: 0.6;
+      opacity: 0.8;
     }
 
     /* Typography */
@@ -47,7 +47,7 @@
     
     /* Layout */
     .screen {
-      display: none;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -55,13 +55,16 @@
       width: 100%;
       padding: 2rem;
       opacity: 0;
-      transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      pointer-events: none;
+      transition: opacity 0.35s ease-out, transform 0.35s ease-out;
       transform: translateY(20px);
+      position: absolute;
     }
     .screen.active {
-      display: flex;
       opacity: 1;
+      pointer-events: all;
       transform: translateY(0);
+      position: relative;
     }
 
     /* Components */
@@ -180,6 +183,9 @@
     }
     @media (max-width: 600px) {
       .choices-grid { grid-template-columns: 1fr; }
+      .choice-card { min-height: 80px; }
+      #screen-level { padding-top: 120px; }
+      #btn-setup-continue { position: sticky; bottom: 1rem; z-index: 10; }
     }
     .choice-card {
       background: rgba(255,255,255,0.05);
@@ -193,6 +199,7 @@
       display: flex;
       align-items: flex-start;
       gap: 1rem;
+      will-change: transform;
     }
     .choice-card:hover {
       transform: translateY(-4px);
@@ -202,6 +209,29 @@
     .choice-card.selected {
       background: var(--accent-teal);
       color: var(--bg-deep);
+    }
+    .choice-letter {
+      width: 28px; height: 28px;
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-teal);
+      flex-shrink: 0;
+    }
+    .choice-card.selected .choice-letter {
+      background: var(--bg-deep);
+      border-color: var(--bg-deep);
+    }
+    .check-anim {
+      margin-left: auto;
+      font-weight: bold;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     /* Overlays */
@@ -238,10 +268,21 @@
       text-align: center;
     }
     .identity-hero h1 {
-      font-size: 3rem;
+      font-size: clamp(1.8rem, 5vw, 3rem);
       color: var(--accent-teal);
       margin-bottom: 1rem;
       text-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+    .identity-label {
+      background: linear-gradient(90deg, var(--accent-teal), var(--accent-amber), var(--accent-teal));
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
     }
     .styles-grid {
       display: grid;
@@ -249,7 +290,7 @@
       gap: 1.5rem;
     }
     @media (max-width: 600px) {
-      .styles-grid { grid-template-columns: 1fr; }
+      .styles-grid { grid-template-columns: 1fr; gap: 1rem; }
     }
     .style-card {
       background: rgba(255,255,255,0.03);
@@ -323,17 +364,43 @@
       justify-content: center;
       flex-wrap: wrap;
     }
+    @media (max-width: 600px) {
+      .actions { flex-direction: column; }
+      .actions .btn { width: 100%; }
+    }
 
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
+
+    @keyframes levelRing {
+      from { stroke-dashoffset: 157; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 212, 170, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 170, 0); }
+    }
+
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      background: var(--bg-card); border: 1px solid var(--accent-teal);
+      color: var(--text-primary); padding: 1rem 2rem; border-radius: 8px;
+      font-family: var(--font-mono); font-size: 0.9rem; z-index: 9999;
+      animation: slideUp 0.3s ease-out;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+      will-change: transform;
+    }
+
     @media print {
-      body { background: white; color: black; }
-      .btn, .top-bar, #bg-canvas { display: none !important; }
+      body * { visibility: hidden; }
+      .print-only, .print-only * { visibility: visible; }
+      .print-only { position: absolute; left: 0; top: 0; width: 100%; }
       .card, .radar-container, .style-card, .pathway-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; }
-      .identity-hero h1 { color: black; text-shadow: none; }
+      .identity-hero h1 { color: black; text-shadow: none; -webkit-text-fill-color: black; background: none; }
       .stat-bar-bg { background: #eee; }
       .stat-bar-fill { background: #333 !important; }
       .step-num { background: #333; }
@@ -347,13 +414,13 @@
   <!-- Screen 0: Splash -->
   <div id="screen-0" class="screen active">
     <div style="text-align: center; max-width: 600px;">
-      <h1 style="font-size: 4rem; margin-bottom: 1rem; letter-spacing: -1px;">
+      <h1 style="font-size: 4rem; margin-bottom: 1rem; letter-spacing: -1px; animation: slideUp 0.5s ease-out forwards; opacity: 0;">
         <span style="color: var(--accent-teal)">LEADER</span><span style="color: var(--accent-amber)">SHIFT</span>
       </h1>
-      <p style="font-size: 1.5rem; margin-bottom: 2rem; color: var(--text-primary);">Discover the leader within.</p>
-      <p style="color: var(--text-muted); margin-bottom: 3rem;">10 minutes. 5 challenges. Your unique leadership DNA.</p>
-      <button class="btn" onclick="startGame()">Begin Your Journey &rarr;</button>
-      <div style="margin-top: 4rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); opacity: 0.7;">
+      <p style="font-size: 1.5rem; margin-bottom: 2rem; color: var(--text-primary); animation: slideUp 0.7s ease-out forwards; opacity: 0;">Discover the leader within.</p>
+      <p style="color: var(--text-muted); margin-bottom: 3rem; animation: slideUp 0.9s ease-out forwards; opacity: 0;">10 minutes. 5 challenges. Your unique leadership DNA.</p>
+      <button class="btn" style="animation: slideUp 1.1s ease-out forwards, pulse 2s infinite 1.5s; opacity: 0;" onclick="startGame()">Begin Your Journey &rarr;</button>
+      <div style="margin-top: 4rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); opacity: 0; animation: slideUp 1.3s ease-out forwards;">
         Based on 7 Leadership Theories &bull; Ages 13&ndash;25 &bull; Free
       </div>
     </div>
@@ -368,21 +435,21 @@
       
       <h2 style="margin-bottom: 1rem;">How old are you?</h2>
       <div class="age-toggles">
-        <div class="age-card" onclick="selectAge('13-16')">
+        <div class="age-card" onclick="selectAge('13-16', this)">
           <span style="font-size: 2rem;">🏫</span>
           <div>
             <div style="font-weight: bold; font-size: 1.1rem;">Ages 13–16</div>
             <div style="color: var(--text-muted); font-size: 0.9rem;">School & Teams</div>
           </div>
         </div>
-        <div class="age-card" onclick="selectAge('17-20')">
+        <div class="age-card" onclick="selectAge('17-20', this)">
           <span style="font-size: 2rem;">🎓</span>
           <div>
             <div style="font-weight: bold; font-size: 1.1rem;">Ages 17–20</div>
             <div style="color: var(--text-muted); font-size: 0.9rem;">College & Ambition</div>
           </div>
         </div>
-        <div class="age-card" onclick="selectAge('21-25')">
+        <div class="age-card" onclick="selectAge('21-25', this)">
           <span style="font-size: 2rem;">💼</span>
           <div>
             <div style="font-weight: bold; font-size: 1.1rem;">Ages 21–25</div>
@@ -399,9 +466,11 @@
     <div class="top-bar" style="position: absolute;">
       <div class="mono" style="color: var(--text-muted)">Self-Perception</div>
       <div class="timer-container" style="height: 4px; background: rgba(255,255,255,0.1);">
-        <div id="pre-progress" class="timer-bar" style="width: 25%; background: var(--accent-amber);"></div>
+        <div id="pre-progress" class="timer-bar" style="width: 25%; background: var(--accent-amber); transition: width 0.3s ease;"></div>
       </div>
-      <div class="mono" id="pre-counter">1/4</div>
+      <div class="mono" id="pre-counter">
+        <!-- Dots injected via JS -->
+      </div>
     </div>
     <div class="card" id="pre-assessment-container">
       <!-- Injected via JS -->
@@ -415,11 +484,14 @@
       <div class="timer-container">
         <div id="level-timer" class="timer-bar"></div>
       </div>
-      <div class="mono" id="level-counter">1/5</div>
+      <div class="mono" id="level-counter" style="display: flex; gap: 4px;">
+        <!-- Dots injected via JS -->
+      </div>
     </div>
     
     <div style="width: 100%; max-width: 800px; margin: 0 auto;">
       <div style="font-size: 3rem; margin-bottom: 1rem;" id="level-icon">🧭</div>
+      <div class="mono" style="color: var(--accent-amber); font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem;">SITUATION</div>
       <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; line-height: 1.4;" id="level-scenario">Scenario text goes here...</h2>
       
       <div class="choices-grid" id="level-choices">
@@ -440,8 +512,13 @@
 
   <!-- Level Complete Overlay -->
   <div id="overlay-insight" class="overlay">
-    <h2 style="color: var(--accent-teal); margin-bottom: 2rem; font-size: 2.5rem;">Level Complete</h2>
-    <p style="font-size: 1.5rem; font-style: italic; max-width: 600px; line-height: 1.5;" id="insight-text">Insight goes here.</p>
+    <div style="text-align: center; max-width: 600px;">
+      <div id="insight-icon" style="font-size: 4rem; margin-bottom: 1rem; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🌟</div>
+      <div class="mono" style="color: var(--accent-teal); margin-bottom: 1rem;" id="insight-level-num">LEVEL COMPLETE</div>
+      <h2 style="color: var(--text-primary); margin-bottom: 2rem; font-size: 2rem;" id="insight-title">Title</h2>
+      <p style="font-size: 1.5rem; font-style: italic; line-height: 1.5; color: var(--text-muted); margin-bottom: 2rem;" id="insight-text">Insight goes here.</p>
+      <div id="insight-dots" style="display: flex; gap: 8px; justify-content: center;"></div>
+    </div>
   </div>
 
   <!-- Screen 8: Results -->
@@ -454,44 +531,122 @@
   <script>
     // --- GAME DATA ---
     const GAME_DATA = {
-      preAssessment: [
-        {
-          q: "In a group, you usually...",
-          options: [
-            { text: "🗺️ Plan and organize", theory: "transactional" },
-            { text: "⚡ Motivate others", theory: "transformational" },
-            { text: "👂 Listen and support", theory: "servant" },
-            { text: "🔧 Solve problems", theory: "situational" }
-          ]
-        },
-        {
-          q: "When something goes wrong, your first instinct is...",
-          options: [
-            { text: "Take charge immediately", theory: "transactional" },
-            { text: "Understand what happened first", theory: "situational" },
-            { text: "Check how everyone's feeling", theory: "servant" },
-            { text: "Find the fastest fix", theory: "clarity" }
-          ]
-        },
-        {
-          q: "Leadership to you means...",
-          options: [
-            { text: "Having the best plan", theory: "transactional" },
-            { text: "Inspiring people to believe", theory: "transformational" },
-            { text: "Making sure no one is left behind", theory: "servant" },
-            { text: "Getting results", theory: "transactional" }
-          ]
-        },
-        {
-          q: "In tough situations, you trust...",
-          options: [
-            { text: "Your logic", theory: "transactional" },
-            { text: "Your values", theory: "authentic" },
-            { text: "Your relationships", theory: "servant" },
-            { text: "Your experience", theory: "situational" }
-          ]
-        }
-      ],
+      preAssessment: {
+        "13-16": [
+          {
+            q: "In a group project at school, you usually...",
+            options: [
+              { text: "🗺️ Plan who does what", theory: "transactional" },
+              { text: "⚡ Get everyone excited", theory: "transformational" },
+              { text: "👂 Help struggling teammates", theory: "servant" },
+              { text: "🔧 Fix issues as they come up", theory: "situational" }
+            ]
+          },
+          {
+            q: "When your sports team or club is losing, your first instinct is...",
+            options: [
+              { text: "Tell everyone the new strategy", theory: "transactional" },
+              { text: "Figure out what's going wrong first", theory: "situational" },
+              { text: "Check if everyone is okay", theory: "servant" },
+              { text: "Find the fastest way to score", theory: "clarity" }
+            ]
+          },
+          {
+            q: "Being a good team captain means...",
+            options: [
+              { text: "Having the best game plan", theory: "transactional" },
+              { text: "Inspiring the team to win", theory: "transformational" },
+              { text: "Making sure everyone gets to play", theory: "servant" },
+              { text: "Getting the victory", theory: "transactional" }
+            ]
+          },
+          {
+            q: "When a teacher gives a hard assignment, you trust...",
+            options: [
+              { text: "Your logic and notes", theory: "transactional" },
+              { text: "Your honest effort", theory: "authentic" },
+              { text: "Your friends to study together", theory: "servant" },
+              { text: "Your ability to figure it out", theory: "situational" }
+            ]
+          }
+        ],
+        "17-20": [
+          {
+            q: "In a college committee or study group, you usually...",
+            options: [
+              { text: "🗺️ Set the agenda and deadlines", theory: "transactional" },
+              { text: "⚡ Pitch the big ideas", theory: "transformational" },
+              { text: "👂 Support stressed members", theory: "servant" },
+              { text: "🔧 Adapt to whatever is needed", theory: "situational" }
+            ]
+          },
+          {
+            q: "When an event you're organizing goes wrong, your first instinct is...",
+            options: [
+              { text: "Delegate tasks to fix it immediately", theory: "transactional" },
+              { text: "Assess the damage before acting", theory: "situational" },
+              { text: "Make sure the team isn't panicking", theory: "servant" },
+              { text: "Find the most practical workaround", theory: "clarity" }
+            ]
+          },
+          {
+            q: "Leadership in a student org means...",
+            options: [
+              { text: "Running efficient meetings", theory: "transactional" },
+              { text: "Inspiring members to care", theory: "transformational" },
+              { text: "Developing future leaders", theory: "servant" },
+              { text: "Achieving the org's goals", theory: "transactional" }
+            ]
+          },
+          {
+            q: "In a tough debate or conflict, you trust...",
+            options: [
+              { text: "The facts and evidence", theory: "transactional" },
+              { text: "Your core principles", theory: "authentic" },
+              { text: "Your ability to find common ground", theory: "servant" },
+              { text: "Your read of the room", theory: "situational" }
+            ]
+          }
+        ],
+        "21-25": [
+          {
+            q: "In a cross-functional work team, you usually...",
+            options: [
+              { text: "🗺️ Define the project scope", theory: "transactional" },
+              { text: "⚡ Align everyone on the vision", theory: "transformational" },
+              { text: "👂 Remove blockers for the team", theory: "servant" },
+              { text: "🔧 Pivot when requirements change", theory: "situational" }
+            ]
+          },
+          {
+            q: "When a major deliverable is delayed, your first instinct is...",
+            options: [
+              { text: "Reassign resources to hit the deadline", theory: "transactional" },
+              { text: "Analyze the bottleneck first", theory: "situational" },
+              { text: "Check on the team's burnout levels", theory: "servant" },
+              { text: "Communicate the delay transparently", theory: "clarity" }
+            ]
+          },
+          {
+            q: "Effective management to you means...",
+            options: [
+              { text: "Setting clear KPIs", theory: "transactional" },
+              { text: "Driving innovation and growth", theory: "transformational" },
+              { text: "Empowering your direct reports", theory: "servant" },
+              { text: "Delivering business value", theory: "transactional" }
+            ]
+          },
+          {
+            q: "In high-stakes negotiations, you trust...",
+            options: [
+              { text: "Your data and preparation", theory: "transactional" },
+              { text: "Your professional integrity", theory: "authentic" },
+              { text: "Your relationship with stakeholders", theory: "servant" },
+              { text: "Your ability to read the situation", theory: "situational" }
+            ]
+          }
+        ]
+      },
       levels: [
         {
           id: 1, icon: "🧭", title: "The First Call",
@@ -500,12 +655,26 @@
             "17-20": "You're the project lead for a college submission due in 18 hours. One team member has gone silent and hasn't submitted their section. Everyone else is waiting on you to decide.",
             "21-25": "Your manager assigned you to coordinate a client deliverable. It's 9 PM, due at 9 AM. One intern hasn't sent their part and isn't responding. The team is watching."
           },
-          choices: [
-            { text: "I tell the group exactly what we need to do right now — let's redistribute and finish.", scores: { clarity: 3 }, theories: { transactional: 2 } },
-            { text: "I reach out to the missing teammate first — there might be a real reason.", scores: { empathy: 3 }, theories: { servant: 2 } },
-            { text: "I'll just do their part myself so it gets done right.", scores: { clarity: 1, adaptability: -1 }, theories: {} },
-            { text: "I rally everyone: 'We've got this — let's make it our best work yet!'", scores: { vision: 2 }, theories: { transformational: 2 } }
-          ],
+          choices: {
+            "13-16": [
+              { text: "I tell the group exactly what we need to do right now — let's redistribute and finish.", scores: { clarity: 3 }, theories: { transactional: 2 } },
+              { text: "I reach out to the missing teammate first — there might be a real reason.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I'll just do their part myself so it gets done right.", scores: { clarity: 1, adaptability: -1 }, theories: {} },
+              { text: "I rally everyone: 'We've got this — let's make it our best work yet!'", scores: { vision: 2 }, theories: { transformational: 2 } }
+            ],
+            "17-20": [
+              { text: "I tell the team exactly what we need to do right now — let's redistribute and finish.", scores: { clarity: 3 }, theories: { transactional: 2 } },
+              { text: "I reach out to the silent member first — there might be a real reason.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I'll just do their section myself so we don't fail.", scores: { clarity: 1, adaptability: -1 }, theories: {} },
+              { text: "I rally the team: 'We're almost there — let's push through and crush this!'", scores: { vision: 2 }, theories: { transformational: 2 } }
+            ],
+            "21-25": [
+              { text: "I tell the team exactly what we need to do right now — let's redistribute and hit the deadline.", scores: { clarity: 3 }, theories: { transactional: 2 } },
+              { text: "I reach out to the intern first — there might be a personal emergency.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I'll just do the intern's part myself to protect the client relationship.", scores: { clarity: 1, adaptability: -1 }, theories: {} },
+              { text: "I rally the team: 'This is our moment to shine — let's deliver excellence.'", scores: { vision: 2 }, theories: { transformational: 2 } }
+            ]
+          },
           followUp: {
             q: "After handling the immediate situation, you...",
             options: [
@@ -522,12 +691,26 @@
             "17-20": "Your college event committee is 2 days from the deadline and two key tasks are undone. People are arguing over who does what. You're the coordinator.",
             "21-25": "Your startup team is 48 hours from a product launch. Two features are unfinished. The developer and designer are in conflict about priorities. You're the project manager."
           },
-          choices: [
-            { text: "I break down exactly who does what in the next 48 hours.", scores: { clarity: 3 }, theories: { transactional: 3 } },
-            { text: "I ask the team what they think is most critical and build a plan from that.", scores: { adaptability: 2 }, theories: { situational: 2 } },
-            { text: "I sit with both people in conflict and understand both sides before we plan.", scores: { empathy: 3 }, theories: { servant: 2 } },
-            { text: "I remind the team WHY this matters and get them re-energized first.", scores: { vision: 3 }, theories: { transformational: 2 } }
-          ],
+          choices: {
+            "13-16": [
+              { text: "I break down exactly who does what in the next 5 minutes.", scores: { clarity: 3 }, theories: { transactional: 3 } },
+              { text: "I ask the team what they think is most critical and build a plan from that.", scores: { adaptability: 2 }, theories: { situational: 2 } },
+              { text: "I check in with the players who look defeated to understand why.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I remind the team WHY this matters and get them re-energized first.", scores: { vision: 3 }, theories: { transformational: 2 } }
+            ],
+            "17-20": [
+              { text: "I break down exactly who does what in the next 48 hours.", scores: { clarity: 3 }, theories: { transactional: 3 } },
+              { text: "I ask the committee what they think is most critical and build a plan from that.", scores: { adaptability: 2 }, theories: { situational: 2 } },
+              { text: "I sit with the arguing members and understand both sides before we plan.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I remind the committee WHY this event matters and get them re-energized first.", scores: { vision: 3 }, theories: { transformational: 2 } }
+            ],
+            "21-25": [
+              { text: "I break down exactly who does what in the next 48 hours to launch.", scores: { clarity: 3 }, theories: { transactional: 3 } },
+              { text: "I ask the team what features are most critical and build a plan from that.", scores: { adaptability: 2 }, theories: { situational: 2 } },
+              { text: "I sit with the developer and designer to understand both sides before we plan.", scores: { empathy: 3 }, theories: { servant: 2 } },
+              { text: "I remind the team WHY this product matters and get them re-energized first.", scores: { vision: 3 }, theories: { transformational: 2 } }
+            ]
+          },
           followUp: {
             q: "You also...",
             options: [
@@ -544,12 +727,26 @@
             "17-20": "A talented teammate has gone quiet and withdrawn after being criticized publicly by someone during a meeting. You notice they're about to quit.",
             "21-25": "A high-performing team member is struggling after a personal setback and their work quality has slipped. Your supervisor wants you to 'address performance.' You see the person, not just the numbers."
           },
-          choices: [
-            { text: "I sit with them privately and genuinely listen — no agenda.", scores: { empathy: 4 }, theories: { servant: 3 } },
-            { text: "I bring both sides together and focus on facts and resolution.", scores: { clarity: 2 }, theories: { authentic: 2 } },
-            { text: "I gently remind them that the team needs them — appeal to shared purpose.", scores: { vision: 2 }, theories: { transformational: 2 } },
-            { text: "Performance is performance — I address the output issue professionally.", scores: { clarity: 2 }, theories: { transactional: 2 } }
-          ],
+          choices: {
+            "13-16": [
+              { text: "I sit with them privately and genuinely listen — no agenda.", scores: { empathy: 4 }, theories: { servant: 3 } },
+              { text: "I bring both friends together and focus on facts and resolution.", scores: { clarity: 2 }, theories: { authentic: 2 } },
+              { text: "I gently remind them that the group needs them — appeal to shared purpose.", scores: { vision: 2 }, theories: { transformational: 2 } },
+              { text: "The project comes first — I address the output issue professionally.", scores: { clarity: 2 }, theories: { transactional: 2 } }
+            ],
+            "17-20": [
+              { text: "I sit with the teammate privately and genuinely listen — no agenda.", scores: { empathy: 4 }, theories: { servant: 3 } },
+              { text: "I bring the involved parties together and focus on facts and resolution.", scores: { clarity: 2 }, theories: { authentic: 2 } },
+              { text: "I gently remind them that the team needs them — appeal to shared purpose.", scores: { vision: 2 }, theories: { transformational: 2 } },
+              { text: "Commitment is commitment — I address the withdrawal issue professionally.", scores: { clarity: 2 }, theories: { transactional: 2 } }
+            ],
+            "21-25": [
+              { text: "I sit with them privately and genuinely listen — no agenda.", scores: { empathy: 4 }, theories: { servant: 3 } },
+              { text: "I focus on facts and resolution to help them get back on track.", scores: { clarity: 2 }, theories: { authentic: 2 } },
+              { text: "I gently remind them of their value to the team — appeal to shared purpose.", scores: { vision: 2 }, theories: { transformational: 2 } },
+              { text: "Performance is performance — I address the output issue professionally.", scores: { clarity: 2 }, theories: { transactional: 2 } }
+            ]
+          },
           followUp: {
             q: "After the conversation, you...",
             options: [
@@ -566,12 +763,26 @@
             "17-20": "Your event proposal was heavily inspired by another college's work. Your team wants to present it without crediting them. It's an important competition.",
             "21-25": "Your team discovers a competitor's unreleased strategy through a contact. Using it would guarantee the pitch win. Your manager hasn't said not to — but you know it's wrong."
           },
-          choices: [
-            { text: "We don't do this. I explain why integrity matters more than one win.", scores: { integrity: 5 }, theories: { authentic: 4 } },
-            { text: "I stay neutral — let the team vote on it.", scores: { integrity: -2, clarity: -1 }, theories: {} },
-            { text: "I find a way to acknowledge the source while still competing.", scores: { integrity: 3, vision: 2 }, theories: { authentic: 3 } },
-            { text: "Winning sets us up for bigger things — I'll justify it later.", scores: { integrity: -4 }, theories: { transactional: 1 } }
-          ],
+          choices: {
+            "13-16": [
+              { text: "We don't do this. I explain why integrity matters more than one win.", scores: { integrity: 5 }, theories: { authentic: 4 } },
+              { text: "I stay neutral — let the team vote on it.", scores: { integrity: -2, clarity: -1 }, theories: {} },
+              { text: "I find a way to acknowledge the source while still competing.", scores: { integrity: 3, vision: 2 }, theories: { authentic: 3 } },
+              { text: "Winning sets us up for bigger things — I'll justify it later.", scores: { integrity: -4 }, theories: { transactional: 1 } }
+            ],
+            "17-20": [
+              { text: "We don't do this. I explain why integrity matters more than one win.", scores: { integrity: 5 }, theories: { authentic: 4 } },
+              { text: "I stay neutral — let the team vote on it.", scores: { integrity: -2, clarity: -1 }, theories: {} },
+              { text: "I find a way to acknowledge the source while still competing.", scores: { integrity: 3, vision: 2 }, theories: { authentic: 3 } },
+              { text: "Winning sets us up for bigger things — I'll justify it later.", scores: { integrity: -4 }, theories: { transactional: 1 } }
+            ],
+            "21-25": [
+              { text: "We don't do this. I explain why integrity matters more than one win.", scores: { integrity: 5 }, theories: { authentic: 4 } },
+              { text: "I stay neutral — let the team vote on it.", scores: { integrity: -2, clarity: -1 }, theories: {} },
+              { text: "I find a way to acknowledge the source while still competing.", scores: { integrity: 3, vision: 2 }, theories: { authentic: 3 } },
+              { text: "Winning sets us up for bigger things — I'll justify it later.", scores: { integrity: -4 }, theories: { transactional: 1 } }
+            ]
+          },
           followUp: {
             q: "You later...",
             options: [
@@ -588,12 +799,26 @@
             "17-20": "After a failed college campaign, your core team is demoralized. You've been given one more chance. Most people expect you to play it safe this time.",
             "21-25": "You're leading a volunteer team rebuilding a community initiative that previously failed. Resources are thin. People are skeptical. You need to create belief where there is none."
           },
-          choices: [
-            { text: "I cast a vision that's bigger than just this project — I show them what's possible.", scores: { vision: 5 }, theories: { transformational: 4 } },
-            { text: "I give everyone a clear, structured role and rebuild confidence through small wins.", scores: { clarity: 3, adaptability: 3 }, theories: { situational: 2 } },
-            { text: "I serve quietly — take on the harder tasks, support others, and earn trust back.", scores: { empathy: 4 }, theories: { servant: 4 } },
-            { text: "I have honest conversations about what failed and co-create a new path together.", scores: { integrity: 3, adaptability: 2 }, theories: { authentic: 3 } }
-          ],
+          choices: {
+            "13-16": [
+              { text: "I cast a vision that's bigger than just this project — I show them what's possible.", scores: { vision: 5 }, theories: { transformational: 4 } },
+              { text: "I give everyone a clear, structured role and rebuild confidence through small wins.", scores: { clarity: 3, adaptability: 3 }, theories: { situational: 2 } },
+              { text: "I serve quietly — take on the harder tasks, support others, and earn trust back.", scores: { empathy: 4 }, theories: { servant: 4 } },
+              { text: "I have honest conversations about what failed and co-create a new path together.", scores: { integrity: 3, adaptability: 2 }, theories: { authentic: 3 } }
+            ],
+            "17-20": [
+              { text: "I cast a vision that's bigger than just this project — I show them what's possible.", scores: { vision: 5 }, theories: { transformational: 4 } },
+              { text: "I give everyone a clear, structured role and rebuild confidence through small wins.", scores: { clarity: 3, adaptability: 3 }, theories: { situational: 2 } },
+              { text: "I serve quietly — take on the harder tasks, support others, and earn trust back.", scores: { empathy: 4 }, theories: { servant: 4 } },
+              { text: "I have honest conversations about what failed and co-create a new path together.", scores: { integrity: 3, adaptability: 2 }, theories: { authentic: 3 } }
+            ],
+            "21-25": [
+              { text: "I cast a vision that's bigger than just this project — I show them what's possible.", scores: { vision: 5 }, theories: { transformational: 4 } },
+              { text: "I give everyone a clear, structured role and rebuild confidence through small wins.", scores: { clarity: 3, adaptability: 3 }, theories: { situational: 2 } },
+              { text: "I serve quietly — take on the harder tasks, support others, and earn trust back.", scores: { empathy: 4 }, theories: { servant: 4 } },
+              { text: "I have honest conversations about what failed and co-create a new path together.", scores: { integrity: 3, adaptability: 2 }, theories: { authentic: 3 } }
+            ]
+          },
           followUp: {
             q: "As things improve, you...",
             options: [
@@ -644,10 +869,10 @@
 
     document.getElementById('player-name').addEventListener('input', checkSetupValid);
 
-    function selectAge(age) {
+    function selectAge(age, el) {
       gameState.ageGroup = age;
       document.querySelectorAll('.age-card').forEach(c => c.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
+      el.classList.add('selected');
       checkSetupValid();
     }
 
@@ -670,29 +895,61 @@
 
     function renderPreAssessment() {
       const step = gameState.preAssessmentStep;
-      if (step >= GAME_DATA.preAssessment.length) {
+      const questions = GAME_DATA.preAssessment[gameState.ageGroup];
+      
+      if (step >= questions.length) {
         startLevels();
         return;
       }
       
-      const qData = GAME_DATA.preAssessment[step];
+      const qData = questions[step];
       const container = document.getElementById('pre-assessment-container');
       
-      document.getElementById('pre-progress').style.width = `${((step + 1) / 4) * 100}%`;
-      document.getElementById('pre-counter').innerText = `${step + 1}/4`;
+      document.getElementById('pre-progress').style.width = `${((step + 1) / questions.length) * 100}%`;
+      
+      let dotsHtml = '';
+      for (let i = 0; i < questions.length; i++) {
+        dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${i <= step ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)'};"></div>`;
+      }
+      document.getElementById('pre-counter').innerHTML = `<div style="display: flex; gap: 4px;">${dotsHtml}</div>`;
 
       let html = `<h2 style="margin-bottom: 2rem; font-size: 1.5rem;">${qData.q}</h2><div style="display: flex; flex-direction: column; gap: 1rem;">`;
+      const letters = ['A', 'B', 'C', 'D'];
       qData.options.forEach((opt, idx) => {
-        html += `<div class="choice-card" style="animation: slideUp ${0.1 * idx}s ease-out forwards; opacity: 0; transform: translateY(10px);" onclick="selectPreAssessment('${opt.theory}')">${opt.text}</div>`;
+        html += `<div class="choice-card" onclick="selectPreAssessment('${opt.theory}', this)">
+          <div class="choice-letter">${letters[idx]}</div>
+          <div>${opt.text}</div>
+        </div>`;
       });
       html += `</div>`;
       container.innerHTML = html;
+
+      // JS-driven stagger animation
+      const cards = container.querySelectorAll('.choice-card');
+      cards.forEach((card, idx) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 100 * idx);
+      });
     }
 
-    function selectPreAssessment(theory) {
-      gameState.preAssessment[gameState.preAssessmentStep] = theory;
-      gameState.preAssessmentStep++;
-      renderPreAssessment();
+    function selectPreAssessment(theory, el) {
+      el.classList.add('selected');
+      el.innerHTML += `<div class="check-anim">✓</div>`;
+      
+      // Disable other cards
+      const cards = el.parentElement.querySelectorAll('.choice-card');
+      cards.forEach(c => c.style.pointerEvents = 'none');
+
+      setTimeout(() => {
+        gameState.preAssessment[gameState.preAssessmentStep] = theory;
+        gameState.preAssessmentStep++;
+        renderPreAssessment();
+      }, 400);
     }
 
     function startLevels() {
@@ -704,16 +961,39 @@
     function renderLevel() {
       const level = GAME_DATA.levels[gameState.currentLevelIndex];
       document.getElementById('level-title').innerText = level.title;
-      document.getElementById('level-counter').innerText = `${gameState.currentLevelIndex + 1}/5`;
+      
+      let dotsHtml = '';
+      for (let i = 0; i < 5; i++) {
+        dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${i <= gameState.currentLevelIndex ? 'var(--accent-teal)' : 'rgba(255,255,255,0.2)'};"></div>`;
+      }
+      document.getElementById('level-counter').innerHTML = dotsHtml;
+      
       document.getElementById('level-icon').innerText = level.icon;
       document.getElementById('level-scenario').innerText = level.scenarios[gameState.ageGroup];
       
       const choicesContainer = document.getElementById('level-choices');
       let html = '';
-      level.choices.forEach((choice, idx) => {
-        html += `<div class="choice-card" style="animation: slideUp ${0.1 * idx}s ease-out forwards; opacity: 0; transform: translateY(10px);" onclick="selectLevelChoice(${idx})">${choice.text}</div>`;
+      const letters = ['A', 'B', 'C', 'D'];
+      const currentChoices = level.choices[gameState.ageGroup];
+      currentChoices.forEach((choice, idx) => {
+        html += `<div class="choice-card" onclick="selectLevelChoice(${idx}, this)">
+          <div class="choice-letter">${letters[idx]}</div>
+          <div>${choice.text}</div>
+        </div>`;
       });
       choicesContainer.innerHTML = html;
+
+      // JS-driven stagger animation
+      const cards = choicesContainer.querySelectorAll('.choice-card');
+      cards.forEach((card, idx) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 100 * idx);
+      });
 
       startTimer();
     }
@@ -727,7 +1007,10 @@
         updateTimerUI();
         if (levelTimeLeft <= 0) {
           clearInterval(timerInterval);
-          selectLevelChoice(0);
+          showToast("Time's up!", "error");
+          // Auto-select first choice if time runs out, but visually indicate it
+          const firstCard = document.querySelector('#level-choices .choice-card');
+          if (firstCard) selectLevelChoice(0, firstCard);
         }
       }, 1000);
     }
@@ -743,7 +1026,9 @@
 
     function applyScores(scores, theories) {
       if (scores) {
-        for (let key in scores) gameState.scores[key] += scores[key];
+        for (let key in scores) {
+          gameState.scores[key] = Math.max(0, gameState.scores[key] + scores[key]);
+        }
       }
       if (theories) {
         for (let key in theories) {
@@ -754,19 +1039,30 @@
       }
     }
 
-    function selectLevelChoice(idx) {
+    function selectLevelChoice(idx, el) {
       clearInterval(timerInterval);
+      
+      if (el) {
+        el.classList.add('selected');
+        el.innerHTML += `<div class="check-anim">✓</div>`;
+        const cards = el.parentElement.querySelectorAll('.choice-card');
+        cards.forEach(c => c.style.pointerEvents = 'none');
+      }
+
       if (levelTimeLeft > 55) { // Under 20s
         gameState.scores.adaptability += 2;
         gameState.timeBonus += 2;
+        showToast("⚡ Quick Decision Bonus!", "success");
       }
 
       const level = GAME_DATA.levels[gameState.currentLevelIndex];
-      const choice = level.choices[idx];
+      const choice = level.choices[gameState.ageGroup][idx];
       applyScores(choice.scores, choice.theories);
       gameState.choices.push({ level: level.id, choiceIdx: idx });
 
-      renderFollowUp(level);
+      setTimeout(() => {
+        renderFollowUp(level);
+      }, 400);
     }
 
     function renderFollowUp(level) {
@@ -775,25 +1071,62 @@
       
       const container = document.getElementById('followup-choices');
       let html = '';
+      const letters = ['A', 'B'];
       level.followUp.options.forEach((opt, idx) => {
-        html += `<div class="choice-card" onclick="selectFollowUp(${idx})">${opt.text}</div>`;
+        html += `<div class="choice-card" onclick="selectFollowUp(${idx}, this)">
+          <div class="choice-letter">${letters[idx]}</div>
+          <div>${opt.text}</div>
+        </div>`;
       });
       container.innerHTML = html;
+      
+      // JS-driven stagger animation
+      const cards = container.querySelectorAll('.choice-card');
+      cards.forEach((card, idx) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 100 * idx);
+      });
+
       overlay.classList.add('active');
     }
 
-    function selectFollowUp(idx) {
+    function selectFollowUp(idx, el) {
+      if (el) {
+        el.classList.add('selected');
+        el.innerHTML += `<div class="check-anim">✓</div>`;
+        const cards = el.parentElement.querySelectorAll('.choice-card');
+        cards.forEach(c => c.style.pointerEvents = 'none');
+      }
+
       const level = GAME_DATA.levels[gameState.currentLevelIndex];
       const choice = level.followUp.options[idx];
       applyScores(choice.scores, choice.theories);
       
-      document.getElementById('overlay-followup').classList.remove('active');
-      showInsight(level.insight);
+      setTimeout(() => {
+        document.getElementById('overlay-followup').classList.remove('active');
+        showInsight(level);
+      }, 400);
     }
 
-    function showInsight(text) {
+    function showInsight(level) {
       const overlay = document.getElementById('overlay-insight');
-      document.getElementById('insight-text').innerText = text;
+      
+      document.getElementById('insight-icon').innerText = level.icon;
+      document.getElementById('insight-level-num').innerText = `LEVEL ${gameState.currentLevelIndex + 1} COMPLETE`;
+      document.getElementById('insight-title').innerText = level.title;
+      document.getElementById('insight-text').innerText = `"${level.insight}"`;
+      
+      let dotsHtml = '';
+      for (let i = 0; i < 5; i++) {
+        dotsHtml += `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${i <= gameState.currentLevelIndex ? 'var(--accent-teal)' : 'rgba(255,255,255,0.2)'};"></div>`;
+      }
+      document.getElementById('insight-dots').innerHTML = dotsHtml;
+
       overlay.classList.add('active');
       createParticles();
       
@@ -832,6 +1165,42 @@
     function showResults() {
       switchScreen('screen-results');
       
+      const PARAM_NAMES = {
+        clarity: "Clarity & Direction",
+        integrity: "Integrity & Ethics",
+        empathy: "Empathy & Connection",
+        vision: "Vision & Inspiration",
+        adaptability: "Adaptability & Agility"
+      };
+
+      const PATHWAY_STEPS = {
+        clarity: [
+          "Before your next meeting, write down the 3 specific outcomes you need.",
+          "Practice saying 'no' to tasks that don't align with the main goal.",
+          "Ask your team: 'Is everyone clear on who is doing what by when?'"
+        ],
+        integrity: [
+          "Identify one area where you've compromised your values recently and fix it.",
+          "Have an honest conversation you've been avoiding.",
+          "Publicly take responsibility for a recent team failure."
+        ],
+        empathy: [
+          "In your next 1-on-1, spend 80% of the time listening, not talking.",
+          "Ask a teammate how they are doing personally, before discussing work.",
+          "Acknowledge someone's effort, not just their result, in front of others."
+        ],
+        vision: [
+          "Write down the 'Why' for your current project and share it.",
+          "Connect a mundane task to the bigger picture for a team member.",
+          "Spend 15 minutes imagining what success looks like 6 months from now."
+        ],
+        adaptability: [
+          "When a plan changes, verbally acknowledge the shift and stay positive.",
+          "Ask your team: 'What's another way we could approach this?'",
+          "Intentionally change your routine today to practice flexibility."
+        ]
+      };
+
       // Calculate
       const maxScores = { clarity: 18, integrity: 20, empathy: 18, vision: 18, adaptability: 14 };
       const theories = Object.entries(gameState.theoryPoints).sort((a, b) => b[1] - a[1]);
@@ -849,89 +1218,178 @@
         ? "You know yourself well! Your actions perfectly aligned with your self-perception."
         : `You see yourself as ${preDominant}, but under pressure, you rely on ${primary} strengths.`;
 
-      // Weakest
-      const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.round((v / maxScores[k]) * 100))]);
-      scoresArr.sort((a, b) => a[1] - b[1]);
-      const weakest = scoresArr[0][0];
+      // Weakest & Scores
+      const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.max(5, Math.round((v / maxScores[k]) * 100)))]);
+      const sortedScores = [...scoresArr].sort((a, b) => b[1] - a[1]);
+      const weakest = [...scoresArr].sort((a, b) => a[1] - b[1])[0][0];
+      const steps = PATHWAY_STEPS[weakest];
 
       let html = `
-        <div class="identity-hero" style="animation: slideUp 0.5s ease-out;">
-          <div class="mono" style="color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">Leadership Profile: ${gameState.playerName}</div>
-          <h1>${identityLabel}</h1>
-          <p style="font-size: 1.2rem; color: var(--text-primary);">A leader who ${THEORY_DESCRIPTIONS[primary].toLowerCase()}</p>
-        </div>
-
-        <div class="styles-grid" style="animation: slideUp 0.7s ease-out backwards;">
-          <div class="style-card">
-            <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Dominant Approach</div>
-            <h3>${primary.charAt(0).toUpperCase() + primary.slice(1)}</h3>
-            <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[primary]}</p>
+        <div class="print-only" style="width: 100%;">
+          <div class="identity-hero" style="animation: slideUp 0.5s ease-out;">
+            <div class="mono" style="color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">Leadership Profile: ${gameState.playerName}</div>
+            <h1 class="identity-label" id="animated-identity"></h1>
+            <p style="font-size: 1.2rem; color: var(--text-primary);">A leader who ${THEORY_DESCRIPTIONS[primary].toLowerCase()}</p>
           </div>
-          <div class="style-card">
-            <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Natural Backup</div>
-            <h3>${secondary.charAt(0).toUpperCase() + secondary.slice(1)}</h3>
-            <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[secondary]}</p>
-          </div>
-        </div>
 
-        <div class="radar-container" style="animation: slideUp 0.9s ease-out backwards;">
-          <h3 style="margin-bottom: 1.5rem; font-family: var(--font-display);">Core Parameters</h3>
-          ${scoresArr.reverse().map((s, i) => {
-            const val = Math.max(10, s[1]); // Ensure at least 10% for visual
-            let color = 'var(--accent-teal)';
-            if (val < 50) color = 'var(--accent-rose)';
-            else if (val < 75) color = 'var(--accent-amber)';
-            return `
-              <div class="stat-row">
-                <div class="stat-label">${s[0].charAt(0).toUpperCase() + s[0].slice(1)}</div>
-                <div class="stat-bar-bg">
-                  <div class="stat-bar-fill" style="width: 0%; background: ${color};" data-width="${val}%"></div>
-                </div>
-                <div class="stat-val">${val}%</div>
+          <div class="card" style="animation: slideUp 0.6s ease-out backwards; margin-bottom: 1.5rem;">
+            <div class="mono" style="color: var(--accent-amber); font-weight: bold; margin-bottom: 1rem; font-size: 0.9rem;">SCORE SUMMARY</div>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+              <div style="text-align: center;">
+                <div style="font-size: 2rem; color: var(--accent-teal); font-family: var(--font-mono);">${primary.charAt(0).toUpperCase() + primary.slice(1)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Top Theory</div>
               </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="card" style="animation: slideUp 1.1s ease-out backwards; max-width: 100%;">
-          <h3 style="margin-bottom: 1rem; color: var(--accent-teal);">Perception vs. Reality</h3>
-          <p style="line-height: 1.6;">${gapText}</p>
-        </div>
-
-        <div class="pathway-card" style="animation: slideUp 1.3s ease-out backwards;">
-          <h3>Growth Pathway: Elevating ${weakest.charAt(0).toUpperCase() + weakest.slice(1)}</h3>
-          <div class="pathway-step">
-            <div class="step-num">1</div>
-            <div>Start actively seeking feedback in situations requiring ${weakest}.</div>
+              <div style="text-align: center;">
+                <div style="font-size: 2rem; color: var(--accent-amber); font-family: var(--font-mono);">+${gameState.timeBonus}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Time Bonus</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 2rem; color: var(--accent-rose); font-family: var(--font-mono);">5/5</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Levels Completed</div>
+              </div>
+            </div>
           </div>
-          <div class="pathway-step">
-            <div class="step-num">2</div>
-            <div>Pause before reacting to consider the ${weakest} perspective.</div>
-          </div>
-          <div class="pathway-step">
-            <div class="step-num">3</div>
-            <div>Find a mentor who excels in ${weakest} and observe their approach.</div>
-          </div>
-        </div>
 
-        <div class="reflection" style="animation: slideUp 1.5s ease-out backwards;">
-          "If you could replay one level, which choice would you change — and why?"
+          <div class="styles-grid" style="animation: slideUp 0.7s ease-out backwards;">
+            <div class="style-card">
+              <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Dominant Approach</div>
+              <h3>${primary.charAt(0).toUpperCase() + primary.slice(1)}</h3>
+              <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[primary]}</p>
+            </div>
+            <div class="style-card">
+              <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Natural Backup</div>
+              <h3>${secondary.charAt(0).toUpperCase() + secondary.slice(1)}</h3>
+              <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[secondary]}</p>
+            </div>
+          </div>
+
+          <div class="radar-container" style="animation: slideUp 0.9s ease-out backwards; margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem; font-family: var(--font-display);">Core Parameters</h3>
+            ${sortedScores.map((s, i) => {
+              const val = s[1];
+              let color = 'var(--accent-teal)';
+              if (val < 50) color = 'var(--accent-rose)';
+              else if (val < 75) color = 'var(--accent-amber)';
+              return `
+                <div class="stat-row">
+                  <div class="stat-label">${PARAM_NAMES[s[0]]}</div>
+                  <div class="stat-bar-bg">
+                    <div class="stat-bar-fill" style="width: 0%; background: ${color};" data-width="${val}%"></div>
+                  </div>
+                  <div class="stat-val">${val}%</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="card" style="animation: slideUp 1.1s ease-out backwards; max-width: 100%; margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--accent-teal);">Perception vs. Reality</h3>
+            <p style="line-height: 1.6;">${gapText}</p>
+          </div>
+
+          <div class="pathway-card" style="animation: slideUp 1.3s ease-out backwards; margin-top: 1.5rem;">
+            <h3>Growth Pathway: Elevating ${PARAM_NAMES[weakest]}</h3>
+            <div class="pathway-step">
+              <div class="step-num">1</div>
+              <div>${steps[0]}</div>
+            </div>
+            <div class="pathway-step">
+              <div class="step-num">2</div>
+              <div>${steps[1]}</div>
+            </div>
+            <div class="pathway-step">
+              <div class="step-num">3</div>
+              <div>${steps[2]}</div>
+            </div>
+          </div>
+
+          <div class="reflection" style="animation: slideUp 1.5s ease-out backwards;">
+            "If you could replay one level, which choice would you change — and why?"
+          </div>
         </div>
 
         <div class="actions" style="animation: slideUp 1.7s ease-out backwards;">
           <button class="btn" style="background: var(--accent-teal); color: var(--bg-deep); border-color: var(--accent-teal);" onclick="window.print()">Download Profile</button>
-          <button class="btn" onclick="location.reload()">Play Again</button>
+          <button class="btn" onclick="shareResults()">Share Results</button>
+          <button class="btn" onclick="resetGame()">Play Again</button>
         </div>
       `;
       
       document.getElementById('results-content').innerHTML = html;
+
+      // Typewriter effect
+      setTimeout(() => {
+        typewriter(document.getElementById('animated-identity'), identityLabel, 50);
+      }, 500);
 
       // Animate bars
       setTimeout(() => {
         document.querySelectorAll('.stat-bar-fill').forEach(bar => {
           bar.style.width = bar.getAttribute('data-width');
         });
-      }, 500);
+      }, 1000);
+    }
+
+    function typewriter(element, text, speed) {
+      element.innerHTML = '';
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          element.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(type, speed);
+        }
+      }
+      type();
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerText = msg;
+      if (type === 'error') {
+        toast.style.borderColor = 'var(--accent-rose)';
+      }
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, 20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function shareResults() {
+      const text = `I just discovered my leadership DNA on LeaderShift! I'm a ${document.getElementById('animated-identity').innerText}. Discover yours!`;
+      if (navigator.share) {
+        navigator.share({
+          title: 'LeaderShift',
+          text: text,
+          url: window.location.href
+        }).catch(console.error);
+      } else {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("Copied to clipboard!", "success");
+        });
+      }
+    }
+
+    function resetGame() {
+      gameState = {
+        playerName: "",
+        ageGroup: "",
+        currentScreen: 0,
+        preAssessmentStep: 0,
+        preAssessment: {},
+        currentLevelIndex: 0,
+        scores: { clarity: 0, integrity: 0, empathy: 0, vision: 0, adaptability: 0 },
+        theoryPoints: { transactional: 0, transformational: 0, situational: 0, authentic: 0, servant: 0 },
+        choices: [],
+        timeBonus: 0
+      };
+      document.getElementById('player-name').value = '';
+      document.querySelectorAll('.age-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('btn-setup-continue').disabled = true;
+      switchScreen('screen-0');
     }
 
     // --- EFFECTS ---
