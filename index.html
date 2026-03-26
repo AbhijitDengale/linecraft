@@ -1310,6 +1310,12 @@
         ? matchTexts[Math.floor(Math.random() * matchTexts.length)]
         : mismatchTexts[Math.floor(Math.random() * mismatchTexts.length)];
 
+      // Weakest & Scores
+      const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.max(5, Math.round((v / maxScores[k]) * 100)))]);
+      const sortedScores = [...scoresArr].sort((a, b) => b[1] - a[1]);
+      const weakest = [...scoresArr].sort((a, b) => a[1] - b[1])[0][0];
+      const steps = PATHWAY_STEPS[weakest];
+
       const pathwayIntros = [
         `Growth Pathway: Elevating ${PARAM_NAMES[weakest]}`,
         `Level Up: Strengthening ${PARAM_NAMES[weakest]}`,
@@ -1324,12 +1330,6 @@
         "Think of a leader you admire. How does your profile compare to theirs?"
       ];
       const reflectionText = reflections[Math.floor(Math.random() * reflections.length)];
-
-      // Weakest & Scores
-      const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.max(5, Math.round((v / maxScores[k]) * 100)))]);
-      const sortedScores = [...scoresArr].sort((a, b) => b[1] - a[1]);
-      const weakest = [...scoresArr].sort((a, b) => a[1] - b[1])[0][0];
-      const steps = PATHWAY_STEPS[weakest];
 
       let html = `
         <div class="print-only" style="width: 100%;">
