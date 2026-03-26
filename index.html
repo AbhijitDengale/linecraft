@@ -717,7 +717,11 @@
               { text: "Move on — it's done", scores: {}, theories: {} }
             ]
           },
-          insight: "Clarity under pressure is the foundation of every leader. The best leaders act AND care."
+          insight: [
+            "Clarity under pressure is the foundation of every leader. The best leaders act AND care.",
+            "When the clock is ticking, your team looks to you for direction, not just answers.",
+            "Balancing empathy with execution is the hallmark of a mature leader."
+          ]
         },
         {
           id: 2, icon: "⚙️", title: "The Countdown",
@@ -753,7 +757,11 @@
               { text: "Keep it internal and deal with it yourself", scores: {}, theories: {} }
             ]
           },
-          insight: "Great coordinators don't just manage tasks — they manage energy."
+          insight: [
+            "Great coordinators don't just manage tasks — they manage energy.",
+            "A plan is only as good as the team's willingness to execute it.",
+            "Under tight deadlines, alignment is just as important as assignment."
+          ]
         },
         {
           id: 3, icon: "🤝", title: "The Fault Line",
@@ -789,7 +797,11 @@
               { text: "Trust them to sort it out", scores: {}, theories: {} }
             ]
           },
-          insight: "Leaders who earn trust don't demand it. They create the conditions for it."
+          insight: [
+            "Leaders who earn trust don't demand it. They create the conditions for it.",
+            "Conflict isn't a roadblock; it's an opportunity to strengthen the team's foundation.",
+            "Listening without an agenda is one of the most powerful tools in leadership."
+          ]
         },
         {
           id: 4, icon: "⚖️", title: "The Easy Win",
@@ -825,7 +837,11 @@
               { text: "Don't bring it up again", scores: {}, theories: {} }
             ]
           },
-          insight: "The choices no one sees define the leader everyone eventually becomes."
+          insight: [
+            "The choices no one sees define the leader everyone eventually becomes.",
+            "Integrity isn't just about following rules; it's about setting the standard.",
+            "Short-term wins are never worth long-term compromises in trust."
+          ]
         },
         {
           id: 5, icon: "🌟", title: "The Bigger Picture",
@@ -861,17 +877,41 @@
               { text: "Keep the focus on the result", scores: {}, theories: {} }
             ]
           },
-          insight: "Transformational leadership isn't a style — it's a commitment to people and possibility."
+          insight: [
+            "Transformational leadership isn't a style — it's a commitment to people and possibility.",
+            "When belief is low, a leader's vision becomes the team's fuel.",
+            "True impact happens when you connect everyday tasks to a larger purpose."
+          ]
         }
       ]
     };
 
     const THEORY_DESCRIPTIONS = {
-      transformational: "Inspires and motivates through a shared vision.",
-      transactional: "Focuses on structure, roles, and clear expectations.",
-      servant: "Prioritizes the needs and growth of the team first.",
-      situational: "Adapts leadership style to the specific context.",
-      authentic: "Leads with transparency, values, and genuine integrity."
+      transformational: [
+        "Inspires and motivates through a shared vision.",
+        "Elevates the team by focusing on what's possible.",
+        "Drives change by creating a contagious sense of purpose."
+      ],
+      transactional: [
+        "Focuses on structure, roles, and clear expectations.",
+        "Brings order to chaos through precision and clarity.",
+        "Ensures goals are met with reliable, systematic execution."
+      ],
+      servant: [
+        "Prioritizes the needs and growth of the team first.",
+        "Leads from behind, empowering others to shine.",
+        "Builds deep trust through radical empathy and support."
+      ],
+      situational: [
+        "Adapts leadership style to the specific context.",
+        "Reads the room and provides exactly what the team needs.",
+        "Flexes seamlessly between different approaches to win."
+      ],
+      authentic: [
+        "Leads with transparency, values, and genuine integrity.",
+        "Builds psychological safety through honest communication.",
+        "Stays true to their moral compass, even when it's hard."
+      ]
     };
 
     // --- STATE ---
@@ -1154,7 +1194,11 @@
       document.getElementById('insight-icon').innerText = level.icon;
       document.getElementById('insight-level-num').innerText = `LEVEL ${gameState.currentLevelIndex + 1} COMPLETE`;
       document.getElementById('insight-title').innerText = level.title;
-      document.getElementById('insight-text').innerText = `"${level.insight}"`;
+      
+      const insightText = Array.isArray(level.insight) 
+        ? level.insight[Math.floor(Math.random() * level.insight.length)] 
+        : level.insight;
+      document.getElementById('insight-text').innerText = `"${insightText}"`;
       
       let dotsHtml = '';
       for (let i = 0; i < 5; i++) {
@@ -1242,6 +1286,9 @@
       const primary = theories[0][0];
       const secondary = theories[1][0];
       
+      const primaryDesc = THEORY_DESCRIPTIONS[primary][Math.floor(Math.random() * THEORY_DESCRIPTIONS[primary].length)];
+      const secondaryDesc = THEORY_DESCRIPTIONS[secondary][Math.floor(Math.random() * THEORY_DESCRIPTIONS[secondary].length)];
+      
       const identityLabel = getIdentityLabel(primary, secondary);
       
       // Determine pre-assessment dominant
@@ -1249,9 +1296,34 @@
       Object.values(gameState.preAssessment).forEach(t => { preCounts[t] = (preCounts[t] || 0) + 1; });
       const preDominant = Object.entries(preCounts).sort((a,b) => b[1] - a[1])[0][0];
       
+      const matchTexts = [
+        "You know yourself well! Your actions perfectly aligned with your self-perception.",
+        "Incredible self-awareness. You lead exactly the way you think you do.",
+        "A perfect match! Your core beliefs and your high-pressure decisions are in complete harmony."
+      ];
+      const mismatchTexts = [
+        `You see yourself as ${preDominant}, but under pressure, you rely on ${primary} strengths.`,
+        `While you value ${preDominant} traits, your actual decisions reveal a strong ${primary} instinct.`,
+        `Interestingly, your self-image leans ${preDominant}, but your actions prove you are a natural ${primary} leader.`
+      ];
       const gapText = preDominant === primary 
-        ? "You know yourself well! Your actions perfectly aligned with your self-perception."
-        : `You see yourself as ${preDominant}, but under pressure, you rely on ${primary} strengths.`;
+        ? matchTexts[Math.floor(Math.random() * matchTexts.length)]
+        : mismatchTexts[Math.floor(Math.random() * mismatchTexts.length)];
+
+      const pathwayIntros = [
+        `Growth Pathway: Elevating ${PARAM_NAMES[weakest]}`,
+        `Level Up: Strengthening ${PARAM_NAMES[weakest]}`,
+        `Next Steps: Mastering ${PARAM_NAMES[weakest]}`
+      ];
+      const pathwayIntro = pathwayIntros[Math.floor(Math.random() * pathwayIntros.length)];
+
+      const reflections = [
+        "If you could replay one level, which choice would you change — and why?",
+        "How can you apply your dominant approach to a challenge you're facing right now?",
+        "What is one small habit you can start tomorrow to build your weakest leadership muscle?",
+        "Think of a leader you admire. How does your profile compare to theirs?"
+      ];
+      const reflectionText = reflections[Math.floor(Math.random() * reflections.length)];
 
       // Weakest & Scores
       const scoresArr = Object.entries(gameState.scores).map(([k, v]) => [k, Math.min(100, Math.max(5, Math.round((v / maxScores[k]) * 100)))]);
@@ -1264,7 +1336,7 @@
           <div class="identity-hero" style="animation: slideUp 0.5s ease-out;">
             <div class="mono" style="color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">Leadership Profile: ${gameState.playerName}</div>
             <h1 class="identity-label" id="animated-identity"></h1>
-            <p style="font-size: 1.2rem; color: var(--text-primary);">A leader who ${THEORY_DESCRIPTIONS[primary].toLowerCase()}</p>
+            <p style="font-size: 1.2rem; color: var(--text-primary);">A leader who ${primaryDesc.toLowerCase()}</p>
           </div>
 
           <div class="card" style="animation: slideUp 0.6s ease-out backwards; margin-bottom: 1.5rem;">
@@ -1289,12 +1361,12 @@
             <div class="style-card">
               <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Dominant Approach</div>
               <h3>${primary.charAt(0).toUpperCase() + primary.slice(1)}</h3>
-              <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[primary]}</p>
+              <p style="color: var(--text-primary); font-size: 0.9rem;">${primaryDesc}</p>
             </div>
             <div class="style-card">
               <div class="mono" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Natural Backup</div>
               <h3>${secondary.charAt(0).toUpperCase() + secondary.slice(1)}</h3>
-              <p style="color: var(--text-primary); font-size: 0.9rem;">${THEORY_DESCRIPTIONS[secondary]}</p>
+              <p style="color: var(--text-primary); font-size: 0.9rem;">${secondaryDesc}</p>
             </div>
           </div>
 
@@ -1323,7 +1395,7 @@
           </div>
 
           <div class="pathway-card" style="animation: slideUp 1.3s ease-out backwards; margin-top: 1.5rem;">
-            <h3>Growth Pathway: Elevating ${PARAM_NAMES[weakest]}</h3>
+            <h3>${pathwayIntro}</h3>
             <div class="pathway-step">
               <div class="step-num">1</div>
               <div>${steps[0]}</div>
@@ -1339,7 +1411,7 @@
           </div>
 
           <div class="reflection" style="animation: slideUp 1.5s ease-out backwards;">
-            "If you could replay one level, which choice would you change — and why?"
+            "${reflectionText}"
           </div>
         </div>
 
