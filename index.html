@@ -39,6 +39,7 @@
       top: 0; left: 0; width: 100%; height: 100%;
       z-index: -1;
       opacity: 0.8;
+      filter: blur(40px);
     }
 
     /* Typography */
@@ -69,39 +70,47 @@
 
     /* Components */
     .btn {
-      background: transparent;
+      background: rgba(255,255,255,0.05);
       color: var(--text-primary);
-      border: 1px solid var(--accent-teal);
+      border: 1px solid rgba(255,255,255,0.1);
       padding: 1rem 2rem;
       font-family: var(--font-display);
       font-size: 1.1rem;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       text-transform: uppercase;
       letter-spacing: 1px;
       position: relative;
       overflow: hidden;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
     .btn:hover:not(:disabled) {
       background: var(--accent-teal);
       color: var(--bg-deep);
-      box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+      border-color: var(--accent-teal);
+      box-shadow: 0 0 25px rgba(0, 212, 170, 0.5);
+      transform: translateY(-2px);
     }
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       border-color: var(--text-muted);
+      transform: none;
+      box-shadow: none;
     }
 
     .card {
-      background: var(--bg-card);
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 2rem;
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
       width: 100%;
       max-width: 600px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
     }
 
     input[type="text"] {
@@ -128,24 +137,28 @@
       margin-bottom: 2rem;
     }
     .age-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
       padding: 1.5rem;
-      border-radius: 12px;
+      border-radius: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 1rem;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     .age-card:hover {
-      background: rgba(255,255,255,0.1);
-      transform: translateY(-2px);
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-4px) scale(1.02);
+      border-color: rgba(0, 212, 170, 0.4);
+      box-shadow: 0 10px 25px rgba(0, 212, 170, 0.15);
     }
     .age-card.selected {
       border-color: var(--accent-teal);
-      background: rgba(0, 212, 170, 0.1);
-      box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+      background: rgba(0, 212, 170, 0.15);
+      box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
     }
 
     /* Level UI */
@@ -188,12 +201,14 @@
       #btn-setup-continue { position: sticky; bottom: 1rem; z-index: 10; }
     }
     .choice-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
       padding: 1.5rem;
-      border-radius: 12px;
+      border-radius: 16px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       font-size: 1rem;
       line-height: 1.5;
       display: flex;
@@ -202,9 +217,10 @@
       will-change: transform;
     }
     .choice-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent-teal);
-      box-shadow: 0 5px 15px rgba(0, 212, 170, 0.15);
+      transform: translateY(-4px) scale(1.02);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(0, 212, 170, 0.4);
+      box-shadow: 0 10px 25px rgba(0, 212, 170, 0.15);
     }
     .choice-card.selected {
       background: var(--accent-teal);
@@ -238,7 +254,9 @@
     .overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(10, 14, 26, 0.95);
+      background: rgba(10, 14, 26, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -246,7 +264,7 @@
       z-index: 100;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: opacity 0.4s ease;
       padding: 2rem;
       text-align: center;
     }
@@ -293,18 +311,28 @@
       .styles-grid { grid-template-columns: 1fr; gap: 1rem; }
     }
     .style-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
       padding: 2rem;
-      border-radius: 16px;
+      border-radius: 20px;
       text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .style-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255,255,255,0.15);
     }
     .style-card h3 { color: var(--accent-amber); margin: 1rem 0; }
     
     .radar-container {
-      background: rgba(255,255,255,0.03);
-      padding: 2rem;
-      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 2.5rem;
+      border-radius: 20px;
     }
     .stat-row {
       display: flex;
@@ -328,10 +356,17 @@
     .stat-val { width: 40px; text-align: right; font-family: var(--font-mono); font-size: 0.9rem; }
 
     .pathway-card {
-      background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(0, 212, 170, 0.05));
-      border: 1px solid rgba(244, 63, 94, 0.2);
-      padding: 2rem;
-      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.05), rgba(0, 212, 170, 0.02));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(244, 63, 94, 0.15);
+      padding: 2.5rem;
+      border-radius: 20px;
+      transition: transform 0.3s ease;
+    }
+    .pathway-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(244, 63, 94, 0.3);
     }
     .pathway-card h3 { color: var(--accent-rose); margin-bottom: 1.5rem; }
     .pathway-step {
@@ -1405,14 +1440,19 @@
     window.addEventListener('resize', resize);
     resize();
 
-    for(let i=0; i<5; i++) {
+    for(let i=0; i<6; i++) {
+      let color;
+      if(i % 3 === 0) color = 'rgba(0, 212, 170, 0.15)';
+      else if(i % 3 === 1) color = 'rgba(245, 158, 11, 0.15)';
+      else color = 'rgba(244, 63, 94, 0.15)';
+
       orbs.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        r: Math.random() * 200 + 100,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        color: i % 2 === 0 ? 'rgba(0, 212, 170, 0.05)' : 'rgba(245, 158, 11, 0.05)'
+        r: Math.random() * 300 + 200,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        color: color
       });
     }
 
